@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.31)
-project(first)
+project(Tick-tock)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(first main.cpp)
-add_executable(new_target main.cpp)
-target_link_libraries(first libeasyx.a)
+add_executable(Tick-tock main.cpp)
+target_link_libraries(Tick-tock libeasyx.a)

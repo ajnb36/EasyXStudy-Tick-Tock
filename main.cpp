@@ -2,61 +2,117 @@
 #include <conio.h>
 #include <iostream>
 #include <vector>
+#include <windows.h>
 
-int main() {
-    int width = 800, height = 800;
-    initgraph(width, height);
-    BeginBatchDraw();
-    // setlinecolor(WHITE);
+std::vector<std::vector<int> > whoUsed(3, std::vector<int>(3, -1));
+int width = 800, height = 800;
+int everyL = width / 3;
+// 0±Ì æ‘≤£¨1±Ì æx
+int currentShape = 0;
+
+// ºÏ≤È‘≤ªÚ≤ÊÀ≠ªÒ §
+bool check(const int who) {
+    if (who == whoUsed[0][0] && who == whoUsed[0][1] && who == whoUsed[0][2]) return true;
+    if (who == whoUsed[1][0] && who == whoUsed[1][1] && who == whoUsed[1][2]) return true;
+    if (who == whoUsed[2][0] && who == whoUsed[2][1] && who == whoUsed[2][2]) return true;
+    if (who == whoUsed[0][0] && who == whoUsed[1][0] && who == whoUsed[2][0]) return true;
+    if (who == whoUsed[0][1] && who == whoUsed[1][1] && who == whoUsed[2][1]) return true;
+    if (who == whoUsed[0][2] && who == whoUsed[1][2] && who == whoUsed[2][2]) return true;
+    if (who == whoUsed[0][0] && who == whoUsed[1][1] && who == whoUsed[2][2]) return true;
+    if (who == whoUsed[0][2] && who == whoUsed[1][1] && who == whoUsed[2][0]) return true;
+    return false;
+}
+
+// ºÏ≤È «∑Ò∆Ωæ÷
+bool checkTie() {
+    int flag = true;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (whoUsed[i][j] == -1) {
+                flag = false;
+                return flag;
+            }
+        }
+    }
+    return flag;
+}
+
+// ªÊ÷∆∆Â◊”
+void drawPiece() {
+    for (int i = 0; i < whoUsed.size(); i++) {
+        for (int j = 0; j < whoUsed[i].size(); j++) {
+            if (whoUsed[i][j] == 1) {
+                line(i * everyL, j * everyL, (i + 1) * everyL, (j + 1) * everyL);
+                line((i + 1) * everyL, j * everyL, i * everyL, (j + 1) * everyL);
+            }else if (whoUsed[i][j] == 0) {
+                circle((i+0.5)*everyL, (j+0.5)*everyL, everyL/2);
+            }
+        }
+    }
+}
+
+
+// ªÊ÷∆∆Â≈Ã
+void drawBoard(int width, int height) {
     line(0, height / 3, width, height / 3);
     line(0, height / 3 * 2, width, height / 3 * 2);
     line(width / 3, 0, width / 3, height);
     line(width / 3 * 2, 0, width / 3 * 2, height);
+}
+
+// ªÊ÷∆Ã· æ–≈œ¢
+void drawText() {
+    static TCHAR text[64];
+    char t = currentShape?'X':'O';
+    _stprintf(text,  _T("µ±«∞∆Â◊”Œ™:%c"), t);
+    settextcolor(YELLOW);
+    outtextxy(0, 0, text);
+}
+
+int main() {
+    initgraph(width, height);
+    BeginBatchDraw();
+    drawText();
+    drawBoard(width, height);
     FlushBatchDraw();
-    int r = width / 6;
-    // ‰πù‰∏™‰∏≠ÂøÉÁÇπ
-    std::vector<std::pair<int, int> > nineCenter = {
-        {r, r}, {r * 3, r}, {r * 5, r},
-        {r, r * 3}, {r * 3, r * 3}, {r * 5, r * 3},
-        {r, r * 5}, {r * 3, r * 5}, {r * 5, r * 5},
-    };
-    std::vector<int> whoUsed(9, -1);
-    // 0Ë°®Á§∫ÂúÜÔºå1Ë°®Á§∫x
-    int currentShape = 0;
-    while (true) {
+
+
+    int running = true;
+    while (running) {
+        DWORD begin = GetTickCount();
         ExMessage msg;
         while (peekmessage(&msg)) {
-            // printf("Á≠âÂæÖÊåá‰ª§");
             if (msg.message == WM_LBUTTONDOWN) {
-                // printf("Èº†Ê†áÊåâ‰∏ã‰∫Ü");
                 int mouseX = msg.x, mouseY = msg.y;
-                for (int i = 0;i<9;i++) {
-                    auto point = nineCenter[i];
-                    if (mouseX <= point.first + r && mouseX >= point.first - r &&
-                        mouseY <= point.second + r && mouseY >= point.second - r) {
-                        if (whoUsed[i] == -1) {
-                            if (currentShape) {
-                                line(point.first - r / 2, point.second + r / 2, point.first + r / 2, point.second - r / 2);
-                                line(point.first - r / 2, point.second - r / 2, point.first + r / 2, point.second + r / 2);
-                            }else {
-                                circle(point.first, point.second, r/2);
-                            }
-                            whoUsed[i] = currentShape;
-                            currentShape = !currentShape;
-                        }
-
-                        FlushBatchDraw();
-                        // Âà§Êñ≠Ë∞ÅËµ¢
-                        // Âà§Êñ≠Ê®™‰∏âÊàñÁ´ñ‰∏â‰∏ÄÊ†∑
-                        if (whoUsed[0] == whoUsed[1] && whoUsed[1] == whoUsed[2]) {
-                            std::string who = whoUsed[0] == 0? "circle win":"fork win";
-                            printf_s("%s\n", who.c_str());
-                        }
-                        break;
-                    }
+                int indexX = mouseX / everyL, indexY = mouseY / everyL;
+                if (whoUsed[indexX][indexY] == -1) {
+                    whoUsed[indexX][indexY] = currentShape;
+                    currentShape = !currentShape;
                 }
             }
         }
+
+        cleardevice();
+        drawBoard(width, height);
+        drawPiece();
+        drawText();
+        FlushBatchDraw();
+        if (check(0)) {
+            MessageBox(GetHWnd(), "‘≤ªÒ §", "”Œœ∑Ω· ¯", MB_OK);
+            running = false;
+        } else if (check(1)) {
+            MessageBox(GetHWnd(), "≤ÊªÒ §", "”Œœ∑Ω· ¯", MB_OK);
+            running = false;
+        } else if (checkTie()) {
+            MessageBox(GetHWnd(), "∆Ωæ÷", "”Œœ∑Ω· ¯", MB_OK);
+            running = false;
+        }
+
+        DWORD end = GetTickCount();
+        if (end - begin < 1000 / 60) {
+            Sleep(1000 / 60 - end + begin);
+        }
+
     }
     EndBatchDraw();
     return 0;
